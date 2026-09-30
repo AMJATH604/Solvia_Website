@@ -55,7 +55,8 @@ Before launch, review the starter content. The sample case studies, stats and FA
 
 The site needs a Node.js server with a **persistent disk** for `DATA_DIR`. Good options:
 
-- **Render / Railway / Fly.io**: attach a volume, set `DATA_DIR` to its mount path
+- **Render**: the included `render.yaml` sets up the server, disk, environment and the `solviatechnologies.in` domain (New → Blueprint)
+- **Railway / Fly.io**: attach a volume, set `DATA_DIR` to its mount path
 - **Any VPS**: `npm ci && npm run build && npm start` behind Nginx
 - **Docker**: the included `Dockerfile`
 

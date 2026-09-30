@@ -1,0 +1,26 @@
+# Render Blueprint: New → Blueprint → pick this repo, and Render creates everything below.
+services:
+  - type: web
+    name: solvia-website
+    runtime: node
+    # A paid plan is required for the persistent disk that stores admin edits and uploads.
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: SITE_URL
+        value: https://solviatechnologies.in
+      - key: SESSION_SECRET
+        generateValue: true
+    disk:
+      name: solvia-data
+      mountPath: /var/data
+      sizeGB: 1
+    domains:
+      - solviatechnologies.in
+      - www.solviatechnologies.in
