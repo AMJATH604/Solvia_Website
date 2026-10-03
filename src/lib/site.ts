@@ -25,7 +25,9 @@ export async function getItems(key: string): Promise<(Item & Doc)[]> {
 export const list = <T = Doc>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
 export function siteUrl() {
-  return (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+  // On Vercel the production domain is known automatically; SITE_URL overrides it.
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  return (process.env.SITE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000")).replace(/\/$/, "");
 }
 
 export function formatDate(value: unknown) {

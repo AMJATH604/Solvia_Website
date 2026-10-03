@@ -37,7 +37,11 @@ export default async function Dashboard() {
     { done: (db.collections.team || []).some((t) => t.published), label: "Add your team", href: "/admin/collections/team" },
     { done: (db.collections.testimonials || []).some((t) => t.published), label: "Publish a client testimonial", href: "/admin/collections/testimonials" },
     { done: Boolean(s.about?._updatedAt), label: "Tell your story on the Company page", href: "/admin/content/about" },
-    { done: Boolean(process.env.SITE_URL), label: "Set SITE_URL for SEO and sharing", href: "/admin/backup#deploy" },
+    {
+      done: Boolean(process.env.SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL),
+      label: "Set SITE_URL for SEO and sharing",
+      href: "/admin/backup#deploy",
+    },
   ];
   const done = checklist.filter((c) => c.done).length;
   const hour = new Date().getHours();

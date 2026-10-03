@@ -57,8 +57,9 @@ Before launch, review the starter content. The sample case studies, stats and FA
 
 1. Import the GitHub repo in Vercel (framework: Next.js, no settings to change).
 2. In the project, open **Storage → Create → Blob**, choose **Private**, and connect it to the project. This adds `BLOB_READ_WRITE_TOKEN`.
-3. Add `SITE_URL` (e.g. `https://solviatechnologies.in`) under **Settings → Environment Variables**, then redeploy.
-4. Add your domain under **Settings → Domains** and copy the DNS records into your registrar.
+3. Redeploy, then add your domain under **Settings → Domains** and copy the DNS records into your registrar.
+
+The site address used for the sitemap and social previews comes from Vercel's production domain automatically; set `SITE_URL` only to override it.
 
 On Vercel, content and uploads are kept in the private Blob store instead of on disk; images are served through the site at `/uploads/…`. Uploads are limited to 4 MB each.
 

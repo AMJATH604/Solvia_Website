@@ -43,7 +43,7 @@ export default function BackupPage() {
               point the <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">DATA_DIR</code> environment variable at a persistent disk.
             </>
           )}{" "}
-          Set <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">SITE_URL</code> to your domain (e.g. https://solviatechnologies.in) so search
+          On Vercel the site address is picked up automatically; elsewhere, set <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">SITE_URL</code> to your domain (e.g. https://solviatechnologies.in) so search
           engines and social previews use the right links.
         </p>
       </Card>
