@@ -1,5 +1,6 @@
 // The Solvia wordmark: "sol✓ia" — the "v" is the brand checkmark (Concept 1C "Solved").
-// Built from live text in Outfit SemiBold so it stays crisp at any size.
+// Built from live text in Outfit SemiBold so it stays crisp at any size; the
+// whole mark reads, copies and indexes as "solvia".
 
 type Tone = "dark" | "light" | "mono";
 
@@ -18,24 +19,24 @@ export function Wordmark({
     <span
       role="img"
       aria-label={label}
-      className={`inline-flex items-baseline font-semibold leading-none tracking-[-0.035em] ${text} ${className}`}
+      className={`inline-block font-semibold leading-none tracking-[-0.035em] whitespace-nowrap ${text} ${className}`}
     >
       <span aria-hidden="true">sol</span>
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 54 74"
-        className="mx-[0.01em] inline-block h-[0.74em] w-[0.54em] self-baseline"
-        style={{ verticalAlign: "baseline" }}
-      >
-        <path
-          d="M8 43 L21.5 63.5 L47 10"
-          fill="none"
-          stroke={check}
-          strokeWidth="11.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      {/* The check is drawn, but an invisible real "v" sits under it so copying,
+          search and translation still see the word "solvia". */}
+      <span aria-hidden="true" className="relative mx-[0.01em] inline-block align-baseline">
+        <svg viewBox="0 0 54 74" className="block h-[0.74em] w-[0.54em]">
+          <path
+            d="M8 43 L21.5 63.5 L47 10"
+            fill="none"
+            stroke={check}
+            strokeWidth="11.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="absolute inset-x-0 bottom-0 overflow-hidden text-center text-transparent">v</span>
+      </span>
       <span aria-hidden="true">ia</span>
     </span>
   );
