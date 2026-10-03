@@ -22,7 +22,17 @@ function Chips({ name, options, defaultValue }: { name: string; options: string[
   );
 }
 
-export function ContactForm({ services, budgets, success }: { services: string[]; budgets: string[]; success: string }) {
+export function ContactForm({
+  services,
+  budgets,
+  success,
+  initialService,
+}: {
+  services: string[];
+  budgets: string[];
+  success: string;
+  initialService?: string;
+}) {
   const [state, action, pending] = useActionState<ContactState, FormData>(submitEnquiry, { ok: false });
 
   if (state.ok) {
@@ -63,7 +73,7 @@ export function ContactForm({ services, budgets, success }: { services: string[]
       {services.length > 0 && (
         <fieldset className="mt-7">
           <legend className="mb-3 text-sm font-medium">What do you need help with?</legend>
-          <Chips name="service" options={services} defaultValue={f.service} />
+          <Chips name="service" options={services} defaultValue={f.service ?? initialService} />
         </fieldset>
       )}
       {budgets.length > 0 && (

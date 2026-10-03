@@ -3,14 +3,16 @@ import { getItems, siteUrl } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
-  const staticPaths = ["", "/services", "/solutions", "/work", "/insights", "/about", "/careers", "/contact"];
-  const [services, work, insights, careers] = await Promise.all([
+  const staticPaths = ["", "/products", "/services", "/solutions", "/work", "/insights", "/about", "/careers", "/contact"];
+  const [products, services, work, insights, careers] = await Promise.all([
+    getItems("products"),
     getItems("services"),
     getItems("work"),
     getItems("insights"),
     getItems("careers"),
   ]);
   const detail = [
+    ...products.map((i) => ({ path: `/products/${i.slug}`, updated: i.updatedAt })),
     ...services.map((i) => ({ path: `/services/${i.slug}`, updated: i.updatedAt })),
     ...work.map((i) => ({ path: `/work/${i.slug}`, updated: i.updatedAt })),
     ...insights.map((i) => ({ path: `/insights/${i.slug}`, updated: i.updatedAt })),

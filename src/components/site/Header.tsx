@@ -7,6 +7,7 @@ import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 
 export const NAV = [
+  { href: "/products", label: "Products" },
   { href: "/services", label: "Services" },
   { href: "/solutions", label: "Solutions" },
   { href: "/work", label: "Work" },

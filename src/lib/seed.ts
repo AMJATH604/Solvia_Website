@@ -69,6 +69,10 @@ export const seedSingletons: Record<string, Seed> = {
       "Kubernetes",
       "LLMs & RAG",
     ],
+    productsEyebrow: "Our products",
+    productsTitle: "Built by Solvia, used every day",
+    productsIntro:
+      "Besides building for clients, we design and run our own products — software we own end to end, from the first line of code to the support desk.",
     servicesEyebrow: "What we do",
     servicesTitle: "Everything it takes to get it solved",
     servicesIntro:
@@ -137,6 +141,10 @@ export const seedSingletons: Record<string, Seed> = {
   },
 
   pages: {
+    productsEyebrow: "Products",
+    productsTitle: "Products we build and run ourselves",
+    productsIntro:
+      "Solvia's own software, designed around a single profession's real workflow and supported by the team that built it.",
     servicesEyebrow: "Services",
     servicesTitle: "Capabilities to solve problems end to end",
     servicesIntro:
@@ -168,6 +176,7 @@ export const seedSingletons: Record<string, Seed> = {
     contactIntro:
       "Tell us about the problem. A senior member of the team will reply within one business day.",
     contactServices: [
+      "CaseFlow demo",
       "Custom software",
       "Web & mobile app",
       "AI & automation",
@@ -185,6 +194,145 @@ export const seedSingletons: Record<string, Seed> = {
 type SeedItem = Seed & { published?: boolean };
 
 export const seedCollections: Record<string, SeedItem[]> = {
+  products: [
+    {
+      name: "CaseFlow",
+      slug: "caseflow",
+      tagline: "Legal practice management for Indian advocates",
+      status: "Live",
+      logo: "/products/caseflow-logo.png",
+      accentColor: "#2563EB",
+      featured: true,
+      platforms: ["Android", "Web", "English", "தமிழ்"],
+      headline: "Your entire legal practice, in your pocket.",
+      summary:
+        "CaseFlow brings cases, hearings, clients, fees, filings, evidence and legal research into one app — built for the way Indian advocates actually work, from the court corridor to the chamber desk.",
+      audience: "For advocates, their juniors and their clerks",
+      primaryCtaLabel: "Request a demo",
+      primaryCtaLink: "/contact?interest=CaseFlow%20demo",
+      playStoreLink: "",
+      webAppLink: "",
+      stats: [
+        { value: "15", label: "Built-in legal tools" },
+        { value: "36", label: "States of court portals" },
+        { value: "16", label: "Bare acts, readable offline" },
+        { value: "502", label: "Terms in the legal dictionary" },
+      ],
+      modules: [
+        {
+          icon: "dashboard",
+          title: "Command Centre",
+          text: "The morning screen: active cases, today's hearings, upcoming dates and clients at a glance, with one-tap quick actions.",
+          features: ["Live dashboard", "Court diary", "Daily tasks", "Quick actions"],
+        },
+        {
+          icon: "files",
+          title: "Case Files",
+          text: "Every matter as a complete dossier — CNR, court, parties, acts, IAs, interim orders and history in one place.",
+          features: ["CNR search", "Party details", "Interim orders", "Team assignment"],
+        },
+        {
+          icon: "calendar",
+          title: "Court Calendar",
+          text: "Calendar and list views over every hearing. Adjourn a matter with a reason and the next date rolls forward.",
+          features: ["Adjournment workflow", "Hearing reminders", "Court holidays"],
+        },
+        {
+          icon: "wallet",
+          title: "Clients & Ledger",
+          text: "Per-client fee tracking — agreed, received, expenses and outstanding — with a dated payment timeline.",
+          features: ["Client directory", "Fee ledger", "Installments", "PDF receipts"],
+        },
+        {
+          icon: "file",
+          title: "Filing & Copies",
+          text: "Track e-filing, certified copies and caveats, and reach court portals and eCourts ePay without leaving the app.",
+          features: ["Certified copy pipeline", "Caveat 90-day tracker", "eCourts ePay", "Court portals"],
+        },
+        {
+          icon: "pin",
+          title: "Advocate Commissioner",
+          text: "A complete field kit for commissions: GPS-stamped site visits, hashed evidence photos, notes, witnesses and sketches.",
+          features: ["Site check-in/out", "Evidence photos", "Sketch tool", "Expenses"],
+        },
+        {
+          icon: "bot",
+          title: "CaseFlow AI",
+          text: "An AI legal assistant grounded in Indian statute. Ask a question, or send a photo of an order and it reads it.",
+          features: ["Legal Q&A", "Reads orders from photos", "Legal Pulse news"],
+        },
+        {
+          icon: "calculator",
+          title: "Legal Calculators",
+          text: "Court fee, limitation, delay condonation, interest, maintenance, MACT and partition shares — computed, not guessed.",
+          features: ["Court fee", "Limitation", "MACT", "Partition share"],
+        },
+        {
+          icon: "book",
+          title: "Reference Library",
+          text: "Bare acts readable offline, a legal dictionary, drafting templates, stamp values and the court holiday list.",
+          features: ["Bare acts", "Legal dictionary", "Templates", "Stamp values"],
+        },
+        {
+          icon: "chat",
+          title: "Firm & Network",
+          text: "Digital chambers for your firm, associate invitations, an advocate directory and your bar association in one place.",
+          features: ["Chambers chat", "Recruit associates", "Advocate directory", "My Bar"],
+        },
+      ],
+      spotlights: [
+        {
+          eyebrow: "Command Centre",
+          title: "Know your whole day before you reach court.",
+          text: "Open CaseFlow and the day is already laid out: matters listed today, what's coming up, and the tasks your team is working on — synced live across the firm.",
+          points: ["Today's hearings with court and stage", "Month diary with a count on every date", "Push reminders before each hearing"],
+          visual: "dashboard",
+          image: "",
+        },
+        {
+          eyebrow: "CaseFlow AI",
+          title: "A research assistant that knows Indian law.",
+          text: "CaseFlow AI is grounded in a searchable index of Indian statutes. Ask it a question in plain language, or photograph an order and let it read and summarise it for you.",
+          points: ["Answers grounded in statute", "Reads orders from a photo", "AI keys stay on the server, never on the phone"],
+          visual: "ai",
+          image: "",
+        },
+        {
+          eyebrow: "Advocate Commissioner",
+          title: "Evidence that stands up — stamped, hashed and timed.",
+          text: "Every site visit is checked in and out with GPS coordinates and duration. Each evidence photo carries its location and a SHA-256 fingerprint, so the record can be trusted later.",
+          points: ["GPS-stamped check-in and check-out", "Photos with location and SHA-256 hash", "Notes, witnesses, sketches and expenses"],
+          visual: "field",
+          image: "",
+        },
+        {
+          eyebrow: "Legal Calculators",
+          title: "The deadlines and figures advocates get wrong, done right.",
+          text: "From the Tamil Nadu court fee schedule to limitation periods and Section 5 delay condonation, CaseFlow computes the numbers and shows its working.",
+          points: ["Court fee: 2017 amendment vs 1955 Act", "Limitation and delay condonation", "Interest, maintenance, MACT and partition shares"],
+          visual: "calculator",
+          image: "",
+        },
+      ],
+      trust: [
+        { icon: "key", title: "Secure sign-in", text: "Modern authentication with in-app OTP password reset — no email round trips." },
+        { icon: "shieldcheck", title: "Your data, walled off", text: "Row-level security means each advocate and firm only ever sees their own matters." },
+        { icon: "lock", title: "AI keys never on device", text: "AI requests go through a server-side proxy, so no secret keys live in the app." },
+        { icon: "fingerprint", title: "Tamper-evident evidence", text: "Commission photos carry a SHA-256 hash and GPS fix recorded at capture." },
+      ],
+      screens: [],
+      faqs: [
+        { question: "Who is CaseFlow for?", answer: "Practising advocates in India, along with their juniors and clerks. Firms can invite associates so the whole chamber works from the same case data." },
+        { question: "Which platforms does it run on?", answer: "CaseFlow runs on Android and in the web browser, and both use the same account and data. It's available in English and Tamil." },
+        { question: "Does it work with eCourts?", answer: "Yes. Cases link to their CNR, court fees can be paid through eCourts ePay and synced back to the ledger, and you can import cases from an eCourts mycases.txt export." },
+        { question: "Can I move my existing cases into CaseFlow?", answer: "Yes. Import from an eCourts mycases.txt export, or restore a CaseFlow backup. Any case can also be exported as a portable dossier." },
+        { question: "How do I get started?", answer: "Request a demo and our team will walk you through CaseFlow and help set up your chamber." },
+      ],
+      ctaTitle: "Bring CaseFlow to your chambers.",
+      ctaText: "See how CaseFlow fits your practice in a short walkthrough with our team.",
+    },
+  ],
+
   services: [
     {
       title: "Custom Software Development",

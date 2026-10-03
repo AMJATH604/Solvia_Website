@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Plus, Quote } from "lucide-react";
 import { HeroBoard } from "@/components/site/HeroBoard";
+import { ProductFeature } from "@/components/site/ProductFeature";
 import { Reveal } from "@/components/site/Reveal";
 import { ButtonLink, CtaBand, SectionHeading, ServiceCard, WorkCard } from "@/components/site/ui";
 import { Icon } from "@/lib/icons";
 import { formatDate, getItems, getPage, list, type Doc } from "@/lib/site";
 
 export default async function HomePage() {
-  const [home, services, work, industries, testimonials, insights, faqs] = await Promise.all([
+  const [home, products, services, work, industries, testimonials, insights, faqs] = await Promise.all([
     getPage("home"),
+    getItems("products"),
     getItems("services"),
     getItems("work"),
     getItems("industries"),
@@ -81,6 +83,29 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+      )}
+
+      {/* ---------------------------- Products ---------------------------- */}
+      {products.some((p) => p.featured) && (
+        <section className="container-x pt-24 md:pt-32">
+          <SectionHeading
+            eyebrow={home.productsEyebrow}
+            title={home.productsTitle}
+            intro={home.productsIntro}
+            action={
+              <ButtonLink href="/products" variant="ghost">
+                All products
+              </ButtonLink>
+            }
+          />
+          <div className="mt-14 space-y-6">
+            {products
+              .filter((p) => p.featured)
+              .map((p) => (
+                <ProductFeature key={p.id} product={p} />
+              ))}
           </div>
         </section>
       )}

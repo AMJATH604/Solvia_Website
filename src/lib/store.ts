@@ -61,14 +61,16 @@ export interface Db {
 export const newId = () => crypto.randomBytes(8).toString("hex");
 const now = () => new Date().toISOString();
 
+function seedItems(key: string): Item[] {
+  return (seedCollections[key] || []).map((raw, i) => {
+    const { published = true, ...rest } = raw;
+    return { ...rest, id: newId(), published: Boolean(published), order: i, createdAt: now(), updatedAt: now() } as Item;
+  });
+}
+
 function seedDb(): Db {
   const collections: Record<string, Item[]> = {};
-  for (const def of COLLECTIONS) {
-    collections[def.key] = (seedCollections[def.key] || []).map((raw, i) => {
-      const { published = true, ...rest } = raw;
-      return { ...rest, id: newId(), published: Boolean(published), order: i, createdAt: now(), updatedAt: now() } as Item;
-    });
-  }
+  for (const def of COLLECTIONS) collections[def.key] = seedItems(def.key);
   const singletons: Record<string, Record<string, unknown>> = {};
   for (const def of SINGLETONS) singletons[def.key] = { ...(seedSingletons[def.key] || {}) };
   return { version: 1, singletons, collections, enquiries: [], users: [], media: [], updatedAt: now() };
@@ -85,7 +87,8 @@ async function load(): Promise<Db> {
     const db = JSON.parse(await fs.readFile(DB_FILE, "utf8")) as Db;
     // Make sure newly added singletons/collections exist.
     for (const def of SINGLETONS) db.singletons[def.key] ??= { ...(seedSingletons[def.key] || {}) };
-    for (const def of COLLECTIONS) db.collections[def.key] ??= [];
+    // Collections added in a later version arrive with their starter content.
+    for (const def of COLLECTIONS) db.collections[def.key] ??= seedItems(def.key);
     db.enquiries ??= [];
     db.users ??= [];
     db.media ??= [];

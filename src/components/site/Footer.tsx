@@ -36,6 +36,7 @@ export function Footer({ settings, services }: { settings: Doc; services: Doc[] 
             <h2 className="text-sm font-medium text-white/40">Company</h2>
             <ul className="mt-4 space-y-3 text-[15px]">
               {[
+                ["/products", "Products"],
                 ["/about", "About"],
                 ["/solutions", "Solutions"],
                 ["/work", "Work"],

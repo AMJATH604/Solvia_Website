@@ -6,8 +6,10 @@ import { ContactForm } from "./ContactForm";
 
 export const metadata: Metadata = { title: "Contact" };
 
-export default async function ContactPage() {
-  const [pages, s] = await Promise.all([getPage("pages"), getSettings()]);
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ interest?: string }> }) {
+  const [pages, s, { interest }] = await Promise.all([getPage("pages"), getSettings(), searchParams]);
+  const services = list<string>(pages.contactServices);
+  const preselect = services.find((o) => o.toLowerCase() === String(interest || "").toLowerCase());
   const channels = [
     s.email && { icon: Mail, label: "Email", value: s.email, href: `mailto:${s.email}` },
     s.phone && { icon: Phone, label: "Phone", value: s.phone, href: `tel:${String(s.phone).replace(/\s/g, "")}` },
@@ -58,7 +60,8 @@ export default async function ContactPage() {
         </Reveal>
         <Reveal delay={120}>
           <ContactForm
-            services={list<string>(pages.contactServices)}
+            services={services}
+            initialService={preselect}
             budgets={list<string>(pages.contactBudgets)}
             success={pages.contactSuccess || "Thanks — we'll be in touch soon."}
           />
