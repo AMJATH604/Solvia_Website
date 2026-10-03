@@ -69,10 +69,6 @@ export const seedSingletons: Record<string, Seed> = {
       "Kubernetes",
       "LLMs & RAG",
     ],
-    productsEyebrow: "Our products",
-    productsTitle: "Built by Solvia, used every day",
-    productsIntro:
-      "Besides building for clients, we design and run our own products — software we own end to end, from the first line of code to the support desk.",
     servicesEyebrow: "What we do",
     servicesTitle: "Everything it takes to get it solved",
     servicesIntro:
@@ -202,7 +198,6 @@ export const seedCollections: Record<string, SeedItem[]> = {
       status: "Live",
       logo: "/products/caseflow-logo.png",
       accentColor: "#2563EB",
-      featured: true,
       platforms: ["Android", "Web", "English", "தமிழ்"],
       headline: "Your entire legal practice, in your pocket.",
       summary:

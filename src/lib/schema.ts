@@ -246,11 +246,6 @@ export const SINGLETONS: SingletonDef[] = [
         ],
       },
       {
-        title: "Products section",
-        description: "Shows products marked “Feature on the home page”.",
-        fields: [...titleIntro("products", "products")],
-      },
-      {
         title: "Services section",
         fields: [...titleIntro("services", "services")],
       },
@@ -451,8 +446,7 @@ export const COLLECTIONS: CollectionDef[] = [
       },
       { name: "logo", label: "Logo", type: "image", half: true },
       { name: "accentColor", label: "Product colour", type: "color", half: true },
-      { name: "featured", label: "Feature on the home page", type: "boolean", half: true },
-      { name: "platforms", label: "Platforms & languages", type: "tags", half: true },
+      { name: "platforms", label: "Platforms & languages", type: "tags" },
       { name: "headline", label: "Hero headline", type: "text", required: true },
       { name: "summary", label: "Summary", type: "textarea", rows: 3, required: true },
       { name: "audience", label: "Who it's for", type: "text" },
