@@ -28,6 +28,9 @@ export function AuthForm({
             required
             autoComplete={f.autoComplete}
             placeholder={f.placeholder}
+            // Keep what was typed after a failed attempt (passwords are never sent back).
+            key={state.fields?.[f.name] ?? ""}
+            defaultValue={state.fields?.[f.name]}
             className={`${inputCls} h-11`}
           />
         </label>

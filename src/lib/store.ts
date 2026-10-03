@@ -1,13 +1,14 @@
 import "server-only";
 import crypto from "node:crypto";
+import { cache as reactCache } from "react";
 import { COLLECTIONS, SINGLETONS, type Item } from "./schema";
 import { seedCollections, seedSingletons } from "./seed";
 import { ConflictError, readDoc, writeDoc } from "./storage";
 
 // A small JSON document store: all content lives in one document, content.json,
 // on disk or in a private Vercel Blob store (see storage.ts). Writes in this
-// process are queued, and writes from other servers are detected by version
-// and retried, so concurrent saves never overwrite each other.
+// process are queued; each save bumps a revision number stored in the document,
+// and a save is retried if another server's save landed in between.
 
 export { DATA_DIR, UPLOAD_DIR, usingBlob } from "./storage";
 const DOC = "content.json";
@@ -56,6 +57,8 @@ export interface Db {
   users: User[];
   media: MediaFile[];
   updatedAt: string;
+  /** Incremented on every save; used to detect saves from other servers. */
+  rev?: number;
 }
 
 export const newId = () => crypto.randomBytes(8).toString("hex");
@@ -87,29 +90,21 @@ function normalize(db: Db): Db {
   return db;
 }
 
-let cache: { db: Db; version: string } | null = null;
 let queue: Promise<unknown> = Promise.resolve();
-let seeding: Promise<{ db: Db; version: string }> | null = null;
+let seeding: Promise<Db> | null = null;
 
-async function load(): Promise<{ db: Db; version: string }> {
-  const res = await readDoc(DOC, cache?.version);
-  if (res?.unchanged && cache) return cache;
-  if (res && !res.unchanged) {
-    cache = { db: normalize(JSON.parse(res.text) as Db), version: res.version };
-    return cache;
-  }
+/** Always reads the latest saved document (creating it with starter content on first run). */
+async function load(): Promise<Db> {
+  const text = await readDoc(DOC);
+  if (text !== null) return normalize(JSON.parse(text) as Db);
   // First run: create the store once, even if many requests arrive together.
   seeding ??= (async () => {
-    const db = seedDb();
+    const db = { ...seedDb(), rev: 1 };
     try {
-      const version = await writeDoc(DOC, JSON.stringify(db, null, 2), { create: true });
-      cache = { db, version };
-      return cache;
+      await writeDoc(DOC, JSON.stringify(db, null, 2), { create: true });
+      return db;
     } catch (err) {
-      if (err instanceof ConflictError) {
-        cache = null;
-        return load(); // another server created it first
-      }
+      if (err instanceof ConflictError) return load(); // another server created it first
       throw err;
     }
   })().finally(() => {
@@ -118,28 +113,32 @@ async function load(): Promise<{ db: Db; version: string }> {
   return seeding;
 }
 
+// One read per page view: React's cache() shares the result between the layout,
+// page and metadata of a single request, and every new request reads fresh.
+const readForRequest = reactCache(async () => {
+  await queue;
+  return load();
+});
+
 /** Read a snapshot of the whole store. Treat as read-only. */
 export async function readDb(): Promise<Db> {
-  await queue;
-  return (await load()).db;
+  return readForRequest();
 }
 
-/** Mutate the store; concurrent saves are serialised here and retried across servers. */
+/** Mutate the store; saves are serialised here and retried if another server saved in between. */
 export function mutate<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
   const run = queue.then(async () => {
     for (let attempt = 0; ; attempt++) {
       const base = await load();
-      const db = structuredClone(base.db);
+      const db = structuredClone(base);
       const result = await fn(db);
+      db.rev = (base.rev ?? 0) + 1;
       db.updatedAt = now();
-      try {
-        const version = await writeDoc(DOC, JSON.stringify(db, null, 2), { ifVersion: base.version });
-        cache = { db, version };
-        return result;
-      } catch (err) {
-        if (!(err instanceof ConflictError) || attempt >= 4) throw err;
-        cache = null; // someone else saved first: reload and apply the change again
-      }
+      // Re-check right before saving: if someone else saved meanwhile, redo the change on top of theirs.
+      const latest = attempt < 4 ? await load() : base;
+      if ((latest.rev ?? 0) !== (base.rev ?? 0)) continue;
+      await writeDoc(DOC, JSON.stringify(db, null, 2));
+      return result;
     }
   });
   queue = run.catch(() => undefined);

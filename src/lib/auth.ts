@@ -35,7 +35,7 @@ function getSecret(): Promise<Buffer> {
   secretPromise ??= (async () => {
     // Generated once and kept next to the content (on disk or in private Blob storage).
     const existing = await readDoc(".session-secret");
-    if (existing && !existing.unchanged) return Buffer.from(existing.text, "base64");
+    if (existing) return Buffer.from(existing, "base64");
     const secret = crypto.randomBytes(32);
     try {
       await writeDoc(".session-secret", secret.toString("base64"), { create: true });
@@ -43,7 +43,7 @@ function getSecret(): Promise<Buffer> {
     } catch (err) {
       if (!(err instanceof ConflictError)) throw err;
       const created = await readDoc(".session-secret");
-      if (created && !created.unchanged) return Buffer.from(created.text, "base64");
+      if (created) return Buffer.from(created, "base64");
       throw err;
     }
   })().catch((err) => {

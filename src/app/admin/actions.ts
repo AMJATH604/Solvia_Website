@@ -16,7 +16,14 @@ import { missingRequired, sanitizeFields } from "@/lib/sanitize";
 import { deleteUpload } from "@/lib/storage";
 import { mutate, newId, readDb, type EnquiryStatus } from "@/lib/store";
 
-export type ActionState = { ok: boolean; error?: string; message?: string; at?: number };
+export type ActionState = {
+  ok: boolean;
+  error?: string;
+  message?: string;
+  at?: number;
+  /** Values to put back in the form after a failed attempt (never passwords). */
+  fields?: Record<string, string>;
+};
 
 const str = (v: FormDataEntryValue | null) => String(v ?? "").trim();
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -32,12 +39,12 @@ export async function loginAction(_prev: ActionState, form: FormData): Promise<A
   const password = String(form.get("password") ?? "");
   const ip = await clientIp();
   if (!rateLimit(`login:${ip}`, 10, 15 * 60_000)) {
-    return { ok: false, error: "Too many attempts. Wait 15 minutes and try again." };
+    return { ok: false, error: "Too many attempts. Wait 15 minutes and try again.", fields: { email } };
   }
   const db = await readDb();
   const user = db.users.find((u) => u.email.toLowerCase() === email);
   if (!user || !verifyPassword(password, user.passwordHash)) {
-    return { ok: false, error: "Incorrect email or password." };
+    return { ok: false, error: "Incorrect email or password.", fields: { email } };
   }
   await mutate((d) => {
     const u = d.users.find((x) => x.id === user.id);
@@ -51,9 +58,10 @@ export async function setupAction(_prev: ActionState, form: FormData): Promise<A
   const name = str(form.get("name"));
   const email = str(form.get("email")).toLowerCase();
   const password = String(form.get("password") ?? "");
-  if (!name || !emailOk(email)) return { ok: false, error: "Enter your name and a valid email." };
-  if (password.length < 10) return { ok: false, error: "Use a password of at least 10 characters." };
-  if (password !== String(form.get("confirm") ?? "")) return { ok: false, error: "Passwords don't match." };
+  const fields = { name, email };
+  if (!name || !emailOk(email)) return { ok: false, error: "Enter your name and a valid email.", fields };
+  if (password.length < 10) return { ok: false, error: "Use a password of at least 10 characters.", fields };
+  if (password !== String(form.get("confirm") ?? "")) return { ok: false, error: "Passwords don't match.", fields };
 
   const user = await mutate((db) => {
     if (db.users.length > 0) return null; // Setup only works once.

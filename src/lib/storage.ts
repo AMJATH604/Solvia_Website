@@ -2,7 +2,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { BlobPreconditionFailedError, del, get, put } from "@vercel/blob";
+import { del, get, put } from "@vercel/blob";
 
 // Where the site keeps its data. On a normal server (local, Render, Docker) that
 // is a folder on disk. On Vercel, which has no writable disk, it is a *private*
@@ -31,22 +31,16 @@ const filePath = (name: string) => path.join(/*turbopackIgnore: true*/ DATA_DIR,
 
 /* ------------------------------ Documents ------------------------------ */
 
-export type ReadResult = { unchanged: true; version: string } | { unchanged: false; text: string; version: string };
-
-/** Reads a private document. Pass the version you already have to skip re-downloading it. */
-export async function readDoc(name: string, knownVersion?: string): Promise<ReadResult | null> {
+/** Reads a private document, always fresh. Returns null if it doesn't exist yet. */
+export async function readDoc(name: string): Promise<string | null> {
   assertStorage();
   if (usingBlob) {
-    const res = await get(PREFIX + name, { access: "private", useCache: false, ifNoneMatch: knownVersion });
-    if (!res) return null;
-    if (res.statusCode === 304) return { unchanged: true, version: res.blob.etag };
-    return { unchanged: false, text: await new Response(res.stream).text(), version: res.blob.etag };
+    const res = await get(PREFIX + name, { access: "private", useCache: false });
+    if (!res || res.statusCode !== 200) return null;
+    return new Response(res.stream).text();
   }
   try {
-    const stat = await fs.stat(filePath(name));
-    const version = String(stat.mtimeMs);
-    if (version === knownVersion) return { unchanged: true, version };
-    return { unchanged: false, text: await fs.readFile(filePath(name), "utf8"), version };
+    return await fs.readFile(filePath(name), "utf8");
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw err;
@@ -54,26 +48,23 @@ export async function readDoc(name: string, knownVersion?: string): Promise<Read
 }
 
 /**
- * Writes a private document and returns its new version.
- * `ifVersion` makes the write fail with ConflictError if someone saved in between;
- * `create` makes it fail if the document already exists.
+ * Writes a private document. With `create`, it fails with ConflictError if the
+ * document already exists (so two servers can't both create it).
  */
-export async function writeDoc(name: string, text: string, opts: { ifVersion?: string; create?: boolean } = {}): Promise<string> {
+export async function writeDoc(name: string, text: string, opts: { create?: boolean } = {}): Promise<void> {
   assertStorage();
   if (usingBlob) {
     try {
-      const res = await put(PREFIX + name, text, {
+      await put(PREFIX + name, text, {
         access: "private",
-        contentType: "application/json",
+        contentType: name.endsWith(".json") ? "application/json" : "text/plain",
         addRandomSuffix: false,
         allowOverwrite: !opts.create,
-        ifMatch: opts.create ? undefined : opts.ifVersion,
       });
-      return res.etag;
+      return;
     } catch (err) {
-      if (err instanceof BlobPreconditionFailedError) throw new ConflictError("Document changed");
       // With `create`, a failure usually means another request created it first.
-      if (opts.create && (await readDoc(name))) throw new ConflictError("Document exists");
+      if (opts.create && (await readDoc(name)) !== null) throw new ConflictError("Document exists");
       throw err;
     }
   }
@@ -91,7 +82,6 @@ export async function writeDoc(name: string, text: string, opts: { ifVersion?: s
   const tmp = `${target}.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`;
   await fs.writeFile(tmp, text, { encoding: "utf8", mode: 0o600 });
   await fs.rename(tmp, target);
-  return String((await fs.stat(target)).mtimeMs);
 }
 
 /* ------------------------------- Uploads ------------------------------- */
