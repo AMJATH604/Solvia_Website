@@ -6,12 +6,14 @@ import { BlobPreconditionFailedError, del, get, put } from "@vercel/blob";
 
 // Where the site keeps its data. On a normal server (local, Render, Docker) that
 // is a folder on disk. On Vercel, which has no writable disk, it is a *private*
-// Vercel Blob store: connecting one to the project sets BLOB_READ_WRITE_TOKEN.
+// Vercel Blob store. Connecting one to the project sets BLOB_STORE_ID (the SDK
+// then signs in with Vercel's built-in OIDC token) or, on older setups,
+// BLOB_READ_WRITE_TOKEN.
 
 export const DATA_DIR = path.resolve(/*turbopackIgnore: true*/ process.env.DATA_DIR || path.join(process.cwd(), "data"));
 export const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ DATA_DIR, "uploads");
 
-export const usingBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+export const usingBlob = Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
 const PREFIX = "solvia/";
 
 /** Someone else saved first; reload and try again. */

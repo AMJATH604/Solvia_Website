@@ -56,7 +56,7 @@ Before launch, review the starter content. The sample case studies, stats and FA
 ### Vercel
 
 1. Import the GitHub repo in Vercel (framework: Next.js, no settings to change).
-2. In the project, open **Storage → Create → Blob**, choose **Private**, and connect it to the project. This adds `BLOB_READ_WRITE_TOKEN`.
+2. In the project, open **Storage → Create → Blob**, choose **Private**, and connect it to the project. This adds `BLOB_STORE_ID` (or `BLOB_READ_WRITE_TOKEN` on older setups).
 3. Redeploy, then add your domain under **Settings → Domains** and copy the DNS records into your registrar.
 
 The site address used for the sitemap and social previews comes from Vercel's production domain automatically; set `SITE_URL` only to override it.
@@ -83,7 +83,7 @@ docker run -p 3000:3000 -v solvia-data:/app/data -e SITE_URL=https://solvia.tech
 | Variable | Purpose |
 | --- | --- |
 | `DATA_DIR` | Where content, uploads and the session key are stored on disk (default `./data`) |
-| `BLOB_READ_WRITE_TOKEN` | Set automatically by a connected Vercel Blob store; switches storage from disk to Blob |
+| `BLOB_STORE_ID` / `BLOB_READ_WRITE_TOKEN` | Set automatically by a connected Vercel Blob store; switches storage from disk to Blob |
 | `SITE_URL` | Public URL, used for the sitemap and social previews (e.g. `https://solvia.tech`) |
 | `SESSION_SECRET` | Optional. Signing key for admin sessions; generated automatically if unset |
 | `INSECURE_COOKIES` | Set to `1` only if you must serve the admin over plain HTTP (not recommended) |
