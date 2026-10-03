@@ -1,7 +1,5 @@
 "use server";
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -15,7 +13,8 @@ import {
 } from "@/lib/auth";
 import { COLLECTIONS, getCollection, getSingleton, slugify, type Item } from "@/lib/schema";
 import { missingRequired, sanitizeFields } from "@/lib/sanitize";
-import { mutate, newId, readDb, UPLOAD_DIR, type EnquiryStatus } from "@/lib/store";
+import { deleteUpload } from "@/lib/storage";
+import { mutate, newId, readDb, type EnquiryStatus } from "@/lib/store";
 
 export type ActionState = { ok: boolean; error?: string; message?: string; at?: number };
 
@@ -250,7 +249,7 @@ export async function deleteMediaAction(id: string) {
     return m?.file;
   });
   if (file && /^[a-z0-9-]+\.[a-z0-9]+$/i.test(file)) {
-    await fs.rm(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, file), { force: true });
+    await deleteUpload(file);
   }
   revalidatePath("/admin/media");
 }

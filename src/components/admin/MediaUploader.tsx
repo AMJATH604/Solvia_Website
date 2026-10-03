@@ -50,7 +50,7 @@ export function MediaUploader() {
       >
         {busy ? <Loader2 className="size-7 animate-spin text-brand" /> : <UploadCloud className="size-7 text-ink/40" />}
         <p className="mt-3 font-medium">{busy ? `Uploading ${busy} file${busy > 1 ? "s" : ""}…` : "Drop files here or click to upload"}</p>
-        <p className="mt-1 text-[13px] text-muted">PNG, JPG, WebP, GIF, AVIF, SVG or PDF · up to 10 MB each</p>
+        <p className="mt-1 text-[13px] text-muted">PNG, JPG, WebP, GIF, AVIF, SVG or PDF · up to 4 MB each</p>
       </button>
       <input ref={ref} type="file" multiple accept="image/*,application/pdf" className="hidden" onChange={(e) => upload(e.target.files)} />
       {errors.length > 0 && (

@@ -27,7 +27,7 @@ Also: SEO metadata and social previews, `sitemap.xml`, `robots.txt`, a branded 4
 - **Enquiries inbox**: status tracking, internal notes, reply by email, CSV export
 - **Page editors**: Home, Company, page headers, and site settings (brand colour, logo, contact details, social links, SEO, announcement bar, footer)
 - **Content**: Services, Solutions, Case studies, Insights, Careers, Team, Testimonials and FAQs, each with create, edit, duplicate, reorder, publish/draft and delete
-- **Media library**: drag-and-drop uploads, usable from any image field
+- **Media library**: drag-and-drop uploads (up to 4 MB each), usable from any image field
 - **Admins**: invite more people; change your own password
 - **Backup & restore**: download everything as one JSON file, or restore it
 - ⌘K command palette, ⌘S to save, and a warning before you leave with unsaved changes
@@ -46,14 +46,25 @@ The first time you open `/admin` you'll be asked to **create the admin account**
 
 ## How content is stored
 
-All content lives in one JSON file, `DATA_DIR/content.json` (default `./data`). Uploaded files go in `DATA_DIR/uploads/`.
+All content lives in one JSON document, `content.json`: in `DATA_DIR` on a normal server (default `./data`), or in a private Vercel Blob store on Vercel. Uploaded files sit alongside it.
 On first run the store is filled with starter content, which you then edit in the admin panel. The `data/` folder is git-ignored, so use **Backup & restore** to keep copies.
 
 Before launch, review the starter content. The sample case studies, stats and FAQ answers are placeholders that need your real details. The dashboard's launch checklist tracks what's left.
 
 ## Deploying
 
-The site needs a Node.js server with a **persistent disk** for `DATA_DIR`. Good options:
+### Vercel
+
+1. Import the GitHub repo in Vercel (framework: Next.js, no settings to change).
+2. In the project, open **Storage → Create → Blob**, choose **Private**, and connect it to the project. This adds `BLOB_READ_WRITE_TOKEN`.
+3. Add `SITE_URL` (e.g. `https://solviatechnologies.in`) under **Settings → Environment Variables**, then redeploy.
+4. Add your domain under **Settings → Domains** and copy the DNS records into your registrar.
+
+On Vercel, content and uploads are kept in the private Blob store instead of on disk; images are served through the site at `/uploads/…`. Uploads are limited to 4 MB each.
+
+### Servers with a disk
+
+Anywhere else, the site needs a Node.js server with a **persistent disk** for `DATA_DIR`. Good options:
 
 - **Render**: the included `render.yaml` sets up the server, disk, environment and the `solviatechnologies.in` domain (New → Blueprint)
 - **Railway / Fly.io**: attach a volume, set `DATA_DIR` to its mount path
@@ -65,13 +76,13 @@ docker build -t solvia-website .
 docker run -p 3000:3000 -v solvia-data:/app/data -e SITE_URL=https://solvia.tech solvia-website
 ```
 
-Serverless hosts with read-only file systems (e.g. plain Vercel) won't keep admin edits unless the store is moved to a database.
 
 ### Environment variables
 
 | Variable | Purpose |
 | --- | --- |
-| `DATA_DIR` | Where content, uploads and the session key are stored (default `./data`) |
+| `DATA_DIR` | Where content, uploads and the session key are stored on disk (default `./data`) |
+| `BLOB_READ_WRITE_TOKEN` | Set automatically by a connected Vercel Blob store; switches storage from disk to Blob |
 | `SITE_URL` | Public URL, used for the sitemap and social previews (e.g. `https://solvia.tech`) |
 | `SESSION_SECRET` | Optional. Signing key for admin sessions; generated automatically if unset |
 | `INSECURE_COOKIES` | Set to `1` only if you must serve the admin over plain HTTP (not recommended) |

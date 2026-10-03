@@ -1,16 +1,16 @@
 import "server-only";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import crypto from "node:crypto";
 import { COLLECTIONS, SINGLETONS, type Item } from "./schema";
 import { seedCollections, seedSingletons } from "./seed";
+import { ConflictError, readDoc, writeDoc } from "./storage";
 
-// A small JSON document store. All content lives in DATA_DIR/content.json and is
-// written atomically (temp file + rename) through a single serialised queue.
+// A small JSON document store: all content lives in one document, content.json,
+// on disk or in a private Vercel Blob store (see storage.ts). Writes in this
+// process are queued, and writes from other servers are detected by version
+// and retried, so concurrent saves never overwrite each other.
 
-export const DATA_DIR = path.resolve(/*turbopackIgnore: true*/ process.env.DATA_DIR || path.join(process.cwd(), "data"));
-export const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ DATA_DIR, "uploads");
-const DB_FILE = path.join(/*turbopackIgnore: true*/ DATA_DIR, "content.json");
+export { DATA_DIR, UPLOAD_DIR, usingBlob } from "./storage";
+const DOC = "content.json";
 
 export type EnquiryStatus = "new" | "open" | "replied" | "archived";
 
@@ -76,61 +76,71 @@ function seedDb(): Db {
   return { version: 1, singletons, collections, enquiries: [], users: [], media: [], updatedAt: now() };
 }
 
-let cache: { db: Db; mtime: number } | null = null;
-let queue: Promise<unknown> = Promise.resolve();
-let seeding: Promise<Db> | null = null;
-
-async function load(): Promise<Db> {
-  try {
-    const stat = await fs.stat(DB_FILE);
-    if (cache && cache.mtime === stat.mtimeMs) return cache.db;
-    const db = JSON.parse(await fs.readFile(DB_FILE, "utf8")) as Db;
-    // Make sure newly added singletons/collections exist.
-    for (const def of SINGLETONS) db.singletons[def.key] ??= { ...(seedSingletons[def.key] || {}) };
-    // Collections added in a later version arrive with their starter content.
-    for (const def of COLLECTIONS) db.collections[def.key] ??= seedItems(def.key);
-    db.enquiries ??= [];
-    db.users ??= [];
-    db.media ??= [];
-    cache = { db, mtime: stat.mtimeMs };
-    return db;
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
-    // First run: create the store once, even if many requests arrive together.
-    seeding ??= (async () => {
-      const db = seedDb();
-      await persist(db);
-      return db;
-    })().finally(() => {
-      seeding = null;
-    });
-    return seeding;
-  }
+function normalize(db: Db): Db {
+  // Make sure newly added singletons/collections exist.
+  for (const def of SINGLETONS) db.singletons[def.key] ??= { ...(seedSingletons[def.key] || {}) };
+  // Collections added in a later version arrive with their starter content.
+  for (const def of COLLECTIONS) db.collections[def.key] ??= seedItems(def.key);
+  db.enquiries ??= [];
+  db.users ??= [];
+  db.media ??= [];
+  return db;
 }
 
-async function persist(db: Db) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  db.updatedAt = now();
-  const tmp = `${DB_FILE}.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(db, null, 2), "utf8");
-  await fs.rename(tmp, DB_FILE);
-  const stat = await fs.stat(DB_FILE);
-  cache = { db, mtime: stat.mtimeMs };
+let cache: { db: Db; version: string } | null = null;
+let queue: Promise<unknown> = Promise.resolve();
+let seeding: Promise<{ db: Db; version: string }> | null = null;
+
+async function load(): Promise<{ db: Db; version: string }> {
+  const res = await readDoc(DOC, cache?.version);
+  if (res?.unchanged && cache) return cache;
+  if (res && !res.unchanged) {
+    cache = { db: normalize(JSON.parse(res.text) as Db), version: res.version };
+    return cache;
+  }
+  // First run: create the store once, even if many requests arrive together.
+  seeding ??= (async () => {
+    const db = seedDb();
+    try {
+      const version = await writeDoc(DOC, JSON.stringify(db, null, 2), { create: true });
+      cache = { db, version };
+      return cache;
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        cache = null;
+        return load(); // another server created it first
+      }
+      throw err;
+    }
+  })().finally(() => {
+    seeding = null;
+  });
+  return seeding;
 }
 
 /** Read a snapshot of the whole store. Treat as read-only. */
 export async function readDb(): Promise<Db> {
   await queue;
-  return load();
+  return (await load()).db;
 }
 
-/** Mutate the store; writes are serialised so concurrent saves never clobber each other. */
+/** Mutate the store; concurrent saves are serialised here and retried across servers. */
 export function mutate<T>(fn: (db: Db) => T | Promise<T>): Promise<T> {
   const run = queue.then(async () => {
-    const db = structuredClone(await load());
-    const result = await fn(db);
-    await persist(db);
-    return result;
+    for (let attempt = 0; ; attempt++) {
+      const base = await load();
+      const db = structuredClone(base.db);
+      const result = await fn(db);
+      db.updatedAt = now();
+      try {
+        const version = await writeDoc(DOC, JSON.stringify(db, null, 2), { ifVersion: base.version });
+        cache = { db, version };
+        return result;
+      } catch (err) {
+        if (!(err instanceof ConflictError) || attempt >= 4) throw err;
+        cache = null; // someone else saved first: reload and apply the change again
+      }
+    }
   });
   queue = run.catch(() => undefined);
   return run;

@@ -1,10 +1,9 @@
 import "server-only";
 import crypto from "node:crypto";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { DATA_DIR, readDb, type User } from "./store";
+import { ConflictError, readDoc, writeDoc } from "./storage";
+import { readDb, type User } from "./store";
 
 const COOKIE = "solvia_session";
 const SESSION_DAYS = 14;
@@ -34,16 +33,23 @@ function getSecret(): Promise<Buffer> {
     return Promise.resolve(Buffer.from(process.env.SESSION_SECRET));
   }
   secretPromise ??= (async () => {
-    const file = path.join(/*turbopackIgnore: true*/ DATA_DIR, ".session-secret");
+    // Generated once and kept next to the content (on disk or in private Blob storage).
+    const existing = await readDoc(".session-secret");
+    if (existing && !existing.unchanged) return Buffer.from(existing.text, "base64");
+    const secret = crypto.randomBytes(32);
     try {
-      return Buffer.from(await fs.readFile(file, "utf8"), "base64");
-    } catch {
-      const secret = crypto.randomBytes(32);
-      await fs.mkdir(DATA_DIR, { recursive: true });
-      await fs.writeFile(file, secret.toString("base64"), { mode: 0o600 });
+      await writeDoc(".session-secret", secret.toString("base64"), { create: true });
       return secret;
+    } catch (err) {
+      if (!(err instanceof ConflictError)) throw err;
+      const created = await readDoc(".session-secret");
+      if (created && !created.unchanged) return Buffer.from(created.text, "base64");
+      throw err;
     }
-  })();
+  })().catch((err) => {
+    secretPromise = null;
+    throw err;
+  });
   return secretPromise;
 }
 

@@ -3,7 +3,7 @@ import { Download } from "lucide-react";
 import { importBackupAction } from "@/app/admin/actions";
 import { SimpleForm } from "@/components/admin/SimpleForm";
 import { btn, Card, PageHeader } from "@/components/admin/ui";
-import { DATA_DIR } from "@/lib/store";
+import { DATA_DIR, usingBlob } from "@/lib/store";
 
 export const metadata: Metadata = { title: "Backup & restore" };
 
@@ -35,10 +35,16 @@ export default function BackupPage() {
           Where your content lives
         </h2>
         <p className="mt-1 text-muted">
-          All content is stored in <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">{DATA_DIR}</code>. When hosting, point the{" "}
-          <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">DATA_DIR</code> environment variable at a persistent disk, and set{" "}
-          <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">SITE_URL</code> to your domain (e.g. https://solvia.tech) so search engines and social
-          previews use the right links.
+          {usingBlob ? (
+            <>All content and uploads are stored in this project&apos;s private Vercel Blob store.</>
+          ) : (
+            <>
+              All content is stored in <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">{DATA_DIR}</code>. When hosting on a server,
+              point the <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">DATA_DIR</code> environment variable at a persistent disk.
+            </>
+          )}{" "}
+          Set <code className="rounded bg-surface px-1.5 py-0.5 text-[13px]">SITE_URL</code> to your domain (e.g. https://solviatechnologies.in) so search
+          engines and social previews use the right links.
         </p>
       </Card>
     </>
