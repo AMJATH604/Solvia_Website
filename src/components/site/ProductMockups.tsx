@@ -378,6 +378,20 @@ function LedgerScreen() {
   );
 }
 
+/* ---------- Map visual names to real screenshots ---------- */
+const REAL_SHOTS: Record<string, string> = {
+  dashboard: "/screenshots/caseflow/dashboard.jpg",
+  diary: "/screenshots/caseflow/calendar-tasks.jpg",
+  ai: "/screenshots/caseflow/legal-pulse.jpg",
+  field: "/screenshots/caseflow/more-hub.jpg",
+  calculator: "/screenshots/caseflow/interest-calc.jpg",
+  ledger: "/screenshots/caseflow/case-dossier.jpg",
+  repository: "/screenshots/caseflow/legal-repository.jpg",
+  home: "/screenshots/caseflow/home-actions.jpg",
+  login: "/screenshots/caseflow/login.jpg",
+  splash: "/screenshots/caseflow/splash.jpg",
+};
+
 const SCREENS: Record<string, () => React.ReactNode> = {
   dashboard: DashboardScreen,
   diary: DiaryScreen,
@@ -388,6 +402,24 @@ const SCREENS: Record<string, () => React.ReactNode> = {
 };
 
 export function ProductScreen({ visual = "dashboard", className = "" }: { visual?: string; className?: string }) {
+  const realImage = REAL_SHOTS[visual];
+  if (realImage) {
+    return (
+      <div
+        className={`relative mx-auto w-[300px] rounded-[46px] border border-white/10 bg-[#05070F] p-[10px] shadow-[0_50px_120px_-40px_rgba(11,16,32,0.75)] ${className}`}
+        aria-hidden="true"
+      >
+        <div className="relative h-[610px] overflow-hidden rounded-[37px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={realImage}
+            alt=""
+            className="h-full w-full object-cover object-top"
+          />
+        </div>
+      </div>
+    );
+  }
   const Screen = SCREENS[visual] || DashboardScreen;
   return (
     <Phone className={className}>

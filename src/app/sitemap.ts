@@ -13,6 +13,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   const detail = [
     ...products.map((i) => ({ path: `/products/${i.slug}`, updated: i.updatedAt })),
+    ...products.flatMap((i) => [
+      { path: `/products/${i.slug}/features`, updated: i.updatedAt },
+      { path: `/products/${i.slug}/pricing`, updated: i.updatedAt },
+      { path: `/products/${i.slug}/bar`, updated: i.updatedAt },
+    ]),
     ...services.map((i) => ({ path: `/services/${i.slug}`, updated: i.updatedAt })),
     ...work.map((i) => ({ path: `/work/${i.slug}`, updated: i.updatedAt })),
     ...insights.map((i) => ({ path: `/insights/${i.slug}`, updated: i.updatedAt })),
