@@ -2,6 +2,7 @@
 
 import { clientIp, rateLimit } from "@/lib/auth";
 import { mutate, newId } from "@/lib/store";
+import { sendEnquiryEmail } from "@/lib/email";
 
 export type ContactState = { ok: boolean; error?: string; fields?: Record<string, string> };
 
@@ -43,6 +44,22 @@ export async function submitEnquiry(_prev: ContactState, form: FormData): Promis
       ip,
     });
   });
+
+  // Send email notification to admin/Gmail
+  try {
+    await sendEnquiryEmail({
+      name: fields.name,
+      email: fields.email,
+      company: fields.company,
+      phone: fields.phone,
+      service: fields.service,
+      budget: fields.budget,
+      message: fields.message,
+      ip,
+    });
+  } catch (emailErr) {
+    console.error("[Contact] Error sending enquiry notification email:", emailErr);
+  }
 
   return { ok: true };
 }
