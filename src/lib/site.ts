@@ -27,7 +27,11 @@ export const list = <T = Doc>(v: unknown): T[] => (Array.isArray(v) ? (v as T[])
 export function siteUrl() {
   // On Vercel the production domain is known automatically; SITE_URL overrides it.
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  return (process.env.SITE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000")).replace(/\/$/, "");
+  let raw = process.env.SITE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000");
+  if (!raw.startsWith("http://") && !raw.startsWith("https://")) {
+    raw = `https://${raw}`;
+  }
+  return raw.replace(/\/$/, "");
 }
 
 export function formatDate(value: unknown) {

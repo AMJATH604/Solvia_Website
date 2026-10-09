@@ -33,11 +33,19 @@ const filePath = (name: string) => path.join(/*turbopackIgnore: true*/ DATA_DIR,
 
 /** Reads a private document, always fresh. Returns null if it doesn't exist yet. */
 export async function readDoc(name: string): Promise<string | null> {
-  assertStorage();
   if (usingBlob) {
-    const res = await get(PREFIX + name, { access: "private", useCache: false });
-    if (!res || res.statusCode !== 200) return null;
-    return new Response(res.stream).text();
+    try {
+      const res = await get(PREFIX + name, { access: "private", useCache: false });
+      if (!res || res.statusCode !== 200) return null;
+      return new Response(res.stream).text();
+    } catch (blobErr) {
+      console.warn("[Storage] Blob read error, falling back:", blobErr);
+      return null;
+    }
+  }
+  if (process.env.VERCEL) {
+    // On Vercel without Blob connected, return null to gracefully use seed data
+    return null;
   }
   try {
     return await fs.readFile(filePath(name), "utf8");

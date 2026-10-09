@@ -95,8 +95,14 @@ let seeding: Promise<Db> | null = null;
 
 /** Always reads the latest saved document (creating it with starter content on first run). */
 async function load(): Promise<Db> {
-  const text = await readDoc(DOC);
-  if (text !== null) return normalize(JSON.parse(text) as Db);
+  try {
+    const text = await readDoc(DOC);
+    if (text !== null) return normalize(JSON.parse(text) as Db);
+  } catch (err) {
+    console.warn("[Store] Error reading doc, using seed:", err);
+    return normalize(seedDb());
+  }
+
   // First run: create the store once, even if many requests arrive together.
   seeding ??= (async () => {
     const db = { ...seedDb(), rev: 1 };
@@ -105,7 +111,8 @@ async function load(): Promise<Db> {
       return db;
     } catch (err) {
       if (err instanceof ConflictError) return load(); // another server created it first
-      throw err;
+      console.warn("[Store] Could not write seed doc, using in-memory seed:", err);
+      return db;
     }
   })().finally(() => {
     seeding = null;
