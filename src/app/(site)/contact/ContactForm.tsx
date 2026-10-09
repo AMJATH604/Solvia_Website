@@ -42,7 +42,7 @@ export function ContactForm({
           <rect width="100" height="100" rx="26" fill="var(--accent)" />
           <path d="M29 52 L44 67 L72 33" pathLength={1} fill="none" stroke="#fff" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <h2 className="mt-8 text-3xl font-semibold tracking-tight">Message received.</h2>
+        <h2 className="mt-8 text-3xl font-semibold tracking-tight">Message sent successfully!</h2>
         <p className="mt-3 max-w-sm text-muted">{success}</p>
       </div>
     );
