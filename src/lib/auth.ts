@@ -27,28 +27,36 @@ export function verifyPassword(password: string, stored: string): boolean {
 /* ------------------------------ Sessions ------------------------------- */
 
 let secretPromise: Promise<Buffer> | null = null;
+let fallbackSecret: Buffer | null = null;
 
 function getSecret(): Promise<Buffer> {
   if (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length >= 16) {
     return Promise.resolve(Buffer.from(process.env.SESSION_SECRET));
   }
   secretPromise ??= (async () => {
-    // Generated once and kept next to the content (on disk or in private Blob storage).
-    const existing = await readDoc(".session-secret");
-    if (existing) return Buffer.from(existing, "base64");
+    try {
+      const existing = await readDoc(".session-secret");
+      if (existing) return Buffer.from(existing, "base64");
+    } catch {}
     const secret = crypto.randomBytes(32);
     try {
       await writeDoc(".session-secret", secret.toString("base64"), { create: true });
       return secret;
     } catch (err) {
-      if (!(err instanceof ConflictError)) throw err;
-      const created = await readDoc(".session-secret");
-      if (created) return Buffer.from(created, "base64");
-      throw err;
+      if (err instanceof ConflictError) {
+        try {
+          const created = await readDoc(".session-secret");
+          if (created) return Buffer.from(created, "base64");
+        } catch {}
+      }
+      console.warn("[Auth] Could not persist .session-secret, using in-memory secret:", err);
+      fallbackSecret ??= secret;
+      return fallbackSecret;
     }
   })().catch((err) => {
     secretPromise = null;
-    throw err;
+    fallbackSecret ??= crypto.randomBytes(32);
+    return fallbackSecret;
   });
   return secretPromise;
 }
@@ -78,15 +86,15 @@ export async function destroySession() {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const token = (await cookies()).get(COOKIE)?.value;
-  if (!token) return null;
-  const [payload, sig] = token.split(".");
-  if (!payload || !sig) return null;
-  const expected = await sign(payload);
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   try {
+    const token = (await cookies()).get(COOKIE)?.value;
+    if (!token) return null;
+    const [payload, sig] = token.split(".");
+    if (!payload || !sig) return null;
+    const expected = await sign(payload);
+    const a = Buffer.from(sig);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
     const { uid, exp, fp } = JSON.parse(Buffer.from(payload, "base64url").toString());
     if (typeof exp !== "number" || exp < Date.now()) return null;
     const db = await readDb();
@@ -94,7 +102,8 @@ export async function getCurrentUser(): Promise<User | null> {
     if (!user) return null;
     const currentFp = crypto.createHash("sha256").update(user.passwordHash).digest("base64url").slice(0, 12);
     return currentFp === fp ? user : null;
-  } catch {
+  } catch (err) {
+    console.warn("[Auth] getCurrentUser error:", err);
     return null;
   }
 }

@@ -10,7 +10,10 @@ import { del, get, put } from "@vercel/blob";
 // then signs in with Vercel's built-in OIDC token) or, on older setups,
 // BLOB_READ_WRITE_TOKEN.
 
-export const DATA_DIR = path.resolve(/*turbopackIgnore: true*/ process.env.DATA_DIR || path.join(process.cwd(), "data"));
+export const DATA_DIR = path.resolve(
+  /*turbopackIgnore: true*/
+  process.env.DATA_DIR || (process.env.VERCEL ? "/tmp/solvia-data" : path.join(process.cwd(), "data")),
+);
 export const UPLOAD_DIR = path.join(/*turbopackIgnore: true*/ DATA_DIR, "uploads");
 
 export const usingBlob = Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
@@ -21,8 +24,8 @@ export class ConflictError extends Error {}
 
 function assertStorage() {
   if (process.env.VERCEL && !usingBlob) {
-    throw new Error(
-      "No storage connected. In Vercel open Storage → Create → Blob (choose Private), connect it to this project, then redeploy.",
+    console.warn(
+      "[Storage] Notice: Vercel Blob is not connected. Storage falls back to /tmp. In Vercel open Storage → Create → Blob (choose Private) and connect it to persist data across deployments.",
     );
   }
 }
@@ -40,18 +43,13 @@ export async function readDoc(name: string): Promise<string | null> {
       return new Response(res.stream).text();
     } catch (blobErr) {
       console.warn("[Storage] Blob read error, falling back:", blobErr);
-      return null;
     }
-  }
-  if (process.env.VERCEL) {
-    // On Vercel without Blob connected, return null to gracefully use seed data
-    return null;
   }
   try {
     return await fs.readFile(filePath(name), "utf8");
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw err;
+    return null;
   }
 }
 
@@ -71,25 +69,29 @@ export async function writeDoc(name: string, text: string, opts: { create?: bool
       });
       return;
     } catch (err) {
-      // With `create`, a failure usually means another request created it first.
       if (opts.create && (await readDoc(name)) !== null) throw new ConflictError("Document exists");
-      throw err;
+      console.warn("[Storage] Blob put error, falling back to disk/tmp:", err);
     }
   }
-  // On disk a single process owns the file; writes are atomic (temp file + rename).
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  const target = filePath(name);
-  if (opts.create) {
-    try {
-      await fs.access(target);
-      throw new ConflictError("Document exists");
-    } catch (err) {
-      if (err instanceof ConflictError) throw err;
+  try {
+    // On disk or /tmp a single process owns the file; writes are atomic (temp file + rename).
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const target = filePath(name);
+    if (opts.create) {
+      try {
+        await fs.access(target);
+        throw new ConflictError("Document exists");
+      } catch (err) {
+        if (err instanceof ConflictError) throw err;
+      }
     }
+    const tmp = `${target}.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`;
+    await fs.writeFile(tmp, text, { encoding: "utf8", mode: 0o600 });
+    await fs.rename(tmp, target);
+  } catch (err) {
+    if (err instanceof ConflictError) throw err;
+    console.warn("[Storage] Disk writeDoc failed:", err);
   }
-  const tmp = `${target}.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`;
-  await fs.writeFile(tmp, text, { encoding: "utf8", mode: 0o600 });
-  await fs.rename(tmp, target);
 }
 
 /* ------------------------------- Uploads ------------------------------- */
@@ -97,18 +99,30 @@ export async function writeDoc(name: string, text: string, opts: { create?: bool
 export async function saveUpload(name: string, data: Buffer, contentType: string) {
   assertStorage();
   if (usingBlob) {
-    await put(`${PREFIX}uploads/${name}`, data, { access: "private", contentType, addRandomSuffix: false });
-    return;
+    try {
+      await put(`${PREFIX}uploads/${name}`, data, { access: "private", contentType, addRandomSuffix: false });
+      return;
+    } catch (err) {
+      console.warn("[Storage] Blob saveUpload failed, falling back to disk/tmp:", err);
+    }
   }
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  await fs.writeFile(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), data);
+  try {
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    await fs.writeFile(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), data);
+  } catch (err) {
+    console.warn("[Storage] saveUpload disk fallback failed:", err);
+  }
 }
 
 export async function readUpload(name: string): Promise<BodyInit | null> {
   assertStorage();
   if (usingBlob) {
-    const res = await get(`${PREFIX}uploads/${name}`, { access: "private" });
-    return res && res.statusCode === 200 ? res.stream : null;
+    try {
+      const res = await get(`${PREFIX}uploads/${name}`, { access: "private" });
+      if (res && res.statusCode === 200) return res.stream;
+    } catch (err) {
+      console.warn("[Storage] Blob readUpload failed, falling back to disk/tmp:", err);
+    }
   }
   try {
     return new Uint8Array(await fs.readFile(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name)));
@@ -120,8 +134,14 @@ export async function readUpload(name: string): Promise<BodyInit | null> {
 export async function deleteUpload(name: string) {
   assertStorage();
   if (usingBlob) {
-    await del(`${PREFIX}uploads/${name}`).catch(() => undefined);
-    return;
+    try {
+      await del(`${PREFIX}uploads/${name}`).catch(() => undefined);
+      return;
+    } catch (err) {
+      console.warn("[Storage] Blob deleteUpload failed:", err);
+    }
   }
-  await fs.rm(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), { force: true });
+  try {
+    await fs.rm(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), { force: true });
+  } catch {}
 }
