@@ -512,15 +512,18 @@ export const COLLECTIONS: CollectionDef[] = [
           { name: "text", label: "Text", type: "textarea", rows: 2 },
         ],
       },
+      { name: "screensEyebrow", label: "A closer look — Eyebrow", type: "text", half: true, placeholder: "Inside the app" },
+      { name: "screensTitle", label: "A closer look — Title", type: "text", half: true, placeholder: "A closer look" },
+      { name: "screensIntro", label: "A closer look — Description", type: "textarea", rows: 2, placeholder: "Real screenshots from the CaseFlow app — what your advocates will actually see." },
       {
         name: "screens",
-        label: "Screenshot gallery",
+        label: "A closer look — Screenshots",
         type: "objects",
-        help: "Optional. Use screenshots with sample data only, never real client details.",
+        help: "Upload and customize screenshots for the 'A closer look' gallery. Reorder, add or replace images at any time.",
         fields: [
-          { name: "image", label: "Screenshot", type: "image" },
-          { name: "title", label: "Title", type: "text", half: true },
-          { name: "caption", label: "Caption", type: "text", half: true },
+          { name: "image", label: "Screenshot image", type: "image" },
+          { name: "title", label: "Screen title", type: "text", half: true },
+          { name: "caption", label: "Screen caption", type: "text", half: true },
         ],
       },
       {

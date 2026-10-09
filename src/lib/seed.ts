@@ -1,6 +1,8 @@
 // Starter content written to the store on first run. Everything here is editable
 // from the admin panel; items marked `published: false` stay hidden until reviewed.
 
+import { CASEFLOW_DEFAULT_SCREENS } from "./caseflow-screens";
+
 type Seed = Record<string, unknown>;
 
 export const seedSingletons: Record<string, Seed> = {
@@ -315,7 +317,6 @@ export const seedCollections: Record<string, SeedItem[]> = {
         { icon: "lock", title: "AI keys never on device", text: "AI requests go through a server-side proxy, so no secret keys live in the app." },
         { icon: "fingerprint", title: "Tamper-evident evidence", text: "Commission photos carry a SHA-256 hash and GPS fix recorded at capture." },
       ],
-      screens: [],
       faqs: [
         { question: "Who is CaseFlow for?", answer: "Practising advocates in India, along with their juniors and clerks. Firms can invite associates so the whole chamber works from the same case data." },
         { question: "Which platforms does it run on?", answer: "CaseFlow runs on Android and in the web browser, and both use the same account and data. It's available in English and Tamil." },
@@ -323,6 +324,10 @@ export const seedCollections: Record<string, SeedItem[]> = {
         { question: "Can I move my existing cases into CaseFlow?", answer: "Yes. Import from an eCourts mycases.txt export, or restore a CaseFlow backup. Any case can also be exported as a portable dossier." },
         { question: "How do I get started?", answer: "Request a demo and our team will walk you through CaseFlow and help set up your chamber." },
       ],
+      screensEyebrow: "Inside the app",
+      screensTitle: "A closer look",
+      screensIntro: "Real screenshots from the CaseFlow app — what your advocates will actually see.",
+      screens: CASEFLOW_DEFAULT_SCREENS,
       ctaTitle: "Bring CaseFlow to your chambers.",
       ctaText: "See how CaseFlow fits your practice in a short walkthrough with our team.",
     },

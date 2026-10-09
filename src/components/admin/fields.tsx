@@ -351,7 +351,13 @@ function ObjectsField({ field, value, onChange }: { field: Field; value: Values[
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
   };
-  const preview = (v: Values) => String(sub.map((f) => v[f.name]).find((x) => typeof x === "string" && x.trim()) || "Untitled");
+  const preview = (v: Values) => {
+    if (typeof v.title === "string" && v.title.trim()) return v.title;
+    if (typeof v.name === "string" && v.name.trim()) return v.name;
+    if (typeof v.label === "string" && v.label.trim()) return v.label;
+    if (typeof v.question === "string" && v.question.trim()) return v.question;
+    return String(sub.map((f) => v[f.name]).find((x) => typeof x === "string" && x.trim()) || "Untitled");
+  };
 
   return (
     <div className="space-y-2">
@@ -361,12 +367,15 @@ function ObjectsField({ field, value, onChange }: { field: Field; value: Values[
             <button
               type="button"
               onClick={() => setCollapsed((c) => ({ ...c, [i]: !c[i] }))}
-              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+              className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
               aria-expanded={!collapsed[i]}
             >
               <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-white text-[12px] font-semibold text-ink/60 ring-1 ring-line">
                 {i + 1}
               </span>
+              {typeof v.image === "string" && v.image && (
+                <img src={v.image} alt="" className="size-8 shrink-0 rounded-md border border-line object-cover bg-white" />
+              )}
               <span className="truncate font-medium">{preview(v)}</span>
             </button>
             <div className="flex shrink-0 items-center">

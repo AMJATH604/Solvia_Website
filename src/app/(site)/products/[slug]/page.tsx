@@ -7,6 +7,7 @@ import { Reveal } from "@/components/site/Reveal";
 import { ProductPageAnimations } from "@/components/site/ProductPageAnimations";
 import { Icon } from "@/lib/icons";
 import { getItems, list, safeColor, type Doc } from "@/lib/site";
+import { CASEFLOW_DEFAULT_SCREENS } from "@/lib/caseflow-screens";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -282,34 +283,20 @@ export default async function ProductPage({ params }: Props) {
 
       {/* ---------------------------- Gallery ----------------------------- */}
       {(() => {
-        const CASEFLOW_SCREENS = [
-          { image: "/screenshots/caseflow/splash.jpg", title: "CaseFlow", caption: "Empowering Justice, Streamlining Law" },
-          { image: "/screenshots/caseflow/ambedkar.jpg", title: "Inspiration", caption: "Constitution is the vehicle of Life — Dr. B.R. Ambedkar" },
-          { image: "/screenshots/caseflow/login.jpg", title: "Welcome", caption: "Clean sign-in with trusted-by-advocates badge" },
-          { image: "/screenshots/caseflow/dashboard.jpg", title: "Dashboard", caption: "Active cases, hearings and quick stats at a glance" },
-          { image: "/screenshots/caseflow/home-actions.jpg", title: "Quick Actions", caption: "One-tap access to cases, clients, hearings and tasks" },
-          { image: "/screenshots/caseflow/calendar-tasks.jpg", title: "Calendar & Tasks", caption: "Court diary with daily task management" },
-          { image: "/screenshots/caseflow/legal-repository.jpg", title: "Legal Repository", caption: "All your case files searchable by title, CNR or client" },
-          { image: "/screenshots/caseflow/case-dossier.jpg", title: "Case Dossier", caption: "Complete case details — CNR, court, parties and status" },
-          { image: "/screenshots/caseflow/case-history.jpg", title: "Case History", caption: "Hearing history, interim orders and team assignment" },
-          { image: "/screenshots/caseflow/legal-pulse.jpg", title: "Legal Pulse", caption: "Live legal news from Supreme Court and High Courts" },
-          { image: "/screenshots/caseflow/legal-dictionary.jpg", title: "Legal Dictionary", caption: "502 legal terms with Latin, English and Criminal categories" },
-          { image: "/screenshots/caseflow/interest-calc.jpg", title: "Interest Calculator", caption: "Simple and compound interest with CPC rates" },
-          { image: "/screenshots/caseflow/partition-share.jpg", title: "Partition Share", caption: "Hindu and Muslim succession share calculations" },
-          { image: "/screenshots/caseflow/more-hub.jpg", title: "More Hub", caption: "Clients, E-Filing, CC Copies, Commissioner and more" },
-        ];
-        const gallery = screens.length > 0 ? screens : (p.slug === "caseflow" ? CASEFLOW_SCREENS : []);
+        const gallery = screens.length > 0 ? screens : (p.slug === "caseflow" ? CASEFLOW_DEFAULT_SCREENS : []);
         return gallery.length > 0 ? (
           <section className="py-24 md:py-32">
             <div className="container-x">
               <Reveal>
-                <p className="eyebrow text-[var(--product)]!">Inside the app</p>
-                <h2 className="display text-4xl md:text-[56px]">A closer look</h2>
-                <p className="mt-4 text-lg text-muted">Real screenshots from the CaseFlow app — what your advocates will actually see.</p>
+                <p className="eyebrow text-[var(--product)]!">{p.screensEyebrow || "Inside the app"}</p>
+                <h2 className="display text-4xl md:text-[56px]">{p.screensTitle || "A closer look"}</h2>
+                <p className="mt-4 text-lg text-muted">
+                  {p.screensIntro || "Real screenshots from the CaseFlow app — what your advocates will actually see."}
+                </p>
               </Reveal>
             </div>
             <div className="mt-12 flex snap-x gap-6 overflow-x-auto px-5 pb-6 md:px-[max(2rem,calc((100vw-1240px)/2+2rem))]">
-              {gallery.map((sc: Doc | typeof CASEFLOW_SCREENS[0], i) => (
+              {gallery.map((sc: Doc | (typeof CASEFLOW_DEFAULT_SCREENS)[0], i) => (
                 <figure key={i} className="w-[240px] shrink-0 snap-start">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={sc.image} alt={sc.title || ""} className="w-full rounded-[32px] border border-line shadow-lg" />
