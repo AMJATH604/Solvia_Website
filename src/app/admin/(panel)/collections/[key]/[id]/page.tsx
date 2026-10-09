@@ -7,7 +7,6 @@ import { Editor } from "@/components/admin/Editor";
 import { btn, Card, PageHeader, timeAgo } from "@/components/admin/ui";
 import { getCollection } from "@/lib/schema";
 import { getItem } from "@/lib/store";
-import { CASEFLOW_DEFAULT_SCREENS } from "@/lib/caseflow-screens";
 
 type Props = { params: Promise<{ key: string; id: string }>; searchParams: Promise<{ created?: string }> };
 
@@ -36,15 +35,6 @@ export default async function ItemPage({ params, searchParams }: Props) {
   if (isNew) {
     const dateField = def.fields.find((f) => f.type === "date");
     if (dateField) initial[dateField.name] = new Date().toISOString().slice(0, 10);
-  }
-
-  if (key === "products" && item?.slug === "caseflow") {
-    if (!initial.screensEyebrow) initial.screensEyebrow = "Inside the app";
-    if (!initial.screensTitle) initial.screensTitle = "A closer look";
-    if (!initial.screensIntro) initial.screensIntro = "Real screenshots from the CaseFlow app — what your advocates will actually see.";
-    if (!Array.isArray(initial.screens) || (initial.screens as unknown[]).length === 0) {
-      initial.screens = CASEFLOW_DEFAULT_SCREENS;
-    }
   }
 
   const title = isNew ? `New ${def.singular.toLowerCase()}` : String(item?.[def.titleField] || def.singular);

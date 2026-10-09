@@ -7,7 +7,6 @@ import { Reveal } from "@/components/site/Reveal";
 import { ProductPageAnimations } from "@/components/site/ProductPageAnimations";
 import { Icon } from "@/lib/icons";
 import { getItems, list, safeColor, type Doc } from "@/lib/site";
-import { CASEFLOW_DEFAULT_SCREENS } from "@/lib/caseflow-screens";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -57,7 +56,6 @@ export default async function ProductPage({ params }: Props) {
   const modules = list(p.modules).filter((m) => m.title);
   const spotlights = list(p.spotlights).filter((s) => s.title);
   const trust = list(p.trust).filter((t) => t.title);
-  const screens = list(p.screens).filter((s) => s.image);
   const faqs = list(p.faqs).filter((f) => f.question);
   const platforms = list<string>(p.platforms);
   const cta = p.primaryCtaLink || "/contact";
@@ -280,34 +278,6 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </section>
       )}
-
-      {/* ---------------------------- Gallery ----------------------------- */}
-      {(() => {
-        const gallery = screens.length > 0 ? screens : (p.slug === "caseflow" ? CASEFLOW_DEFAULT_SCREENS : []);
-        return gallery.length > 0 ? (
-          <section className="py-24 md:py-32">
-            <div className="container-x">
-              <Reveal>
-                <p className="eyebrow text-[var(--product)]!">{p.screensEyebrow || "Inside the app"}</p>
-                <h2 className="display text-4xl md:text-[56px]">{p.screensTitle || "A closer look"}</h2>
-                <p className="mt-4 text-lg text-muted">
-                  {p.screensIntro || "Real screenshots from the CaseFlow app — what your advocates will actually see."}
-                </p>
-              </Reveal>
-            </div>
-            <div className="mt-12 flex snap-x gap-6 overflow-x-auto px-5 pb-6 md:px-[max(2rem,calc((100vw-1240px)/2+2rem))]">
-              {gallery.map((sc: Doc | (typeof CASEFLOW_DEFAULT_SCREENS)[0], i) => (
-                <figure key={i} className="w-[240px] shrink-0 snap-start">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={sc.image} alt={sc.title || ""} className="w-full rounded-[32px] border border-line shadow-lg" />
-                  {sc.title && <figcaption className="mt-4 font-semibold">{sc.title}</figcaption>}
-                  {"caption" in sc && sc.caption && <p className="mt-1 text-sm text-muted">{sc.caption}</p>}
-                </figure>
-              ))}
-            </div>
-          </section>
-        ) : null;
-      })()}
 
       {/* ------------------------------ FAQ ------------------------------- */}
       {faqs.length > 0 && (
